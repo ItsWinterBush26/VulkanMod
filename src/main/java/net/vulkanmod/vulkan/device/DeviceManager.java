@@ -22,7 +22,9 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.vulkan.EXTDebugUtils.VK_EXT_DEBUG_UTILS_EXTENSION_NAME;
 import static org.lwjgl.vulkan.KHRSurface.*;
 import static org.lwjgl.vulkan.VK10.*;
-import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2;
+// *** MODIFIED IMPORT: Use VK_API_VERSION_1_1 instead of VK_API_VERSION_1_2
+import static org.lwjgl.vulkan.VK11.VK_API_VERSION_1_1;
+// import static org.lwjgl.vulkan.VK12.VK_API_VERSION_1_2; // <-- Removed or commented out
 
 public abstract class DeviceManager {
     public static List<Device> availableDevices;
@@ -192,12 +194,14 @@ public abstract class DeviceManager {
             createInfo.pNext(deviceVulkan11Features);
 
             if (Vulkan.DYNAMIC_RENDERING) {
+                // Since we are targeting 1.1, Dynamic Rendering relies on the KHR extension
                 VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeaturesKHR = VkPhysicalDeviceDynamicRenderingFeaturesKHR.calloc(stack);
                 dynamicRenderingFeaturesKHR.sType$Default();
                 dynamicRenderingFeaturesKHR.dynamicRendering(true);
 
                 deviceVulkan11Features.pNext(dynamicRenderingFeaturesKHR.address());
 
+                // The original 1.3/1.2 dynamic rendering feature check is commented out, which is good for 1.1 compatibility:
 //                //Vulkan 1.3 dynamic rendering
 //                VkPhysicalDeviceVulkan13Features deviceVulkan13Features = VkPhysicalDeviceVulkan13Features.calloc(stack);
 //                deviceVulkan13Features.sType$Default();
@@ -220,7 +224,8 @@ public abstract class DeviceManager {
             int res = vkCreateDevice(physicalDevice, createInfo, null, pDevice);
             Vulkan.checkResult(res, "Failed to create logical device");
 
-            vkDevice = new VkDevice(pDevice.get(0), physicalDevice, createInfo, VK_API_VERSION_1_2);
+            // *** MODIFIED LINE: Set API version to 1.1
+            vkDevice = new VkDevice(pDevice.get(0), physicalDevice, createInfo, VK_API_VERSION_1_1);
 
             graphicsQueue = new GraphicsQueue(stack, indices.graphicsFamily);
             transferQueue = new TransferQueue(stack, indices.transferFamily);
@@ -404,4 +409,4 @@ public abstract class DeviceManager {
         public IntBuffer presentModes;
     }
 
-}
+                }
